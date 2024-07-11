@@ -14,6 +14,6 @@ export interface KeyListItemProps extends PropsWithChildren {
   data: any;
   /** 계층 레벨 */
   depth: number;
-  /** 아이템 유형 */
-  type: "directory" | "file";
+  /** 디렉터리 여부 */
+  isDir: boolean;
 }

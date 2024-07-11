@@ -3,7 +3,8 @@ import JSZip from "jszip";
 // React hook
 import { useCallback } from "react";
 // Store
-import { clearOpenFiles, setFiles } from "@stores/editor";
+import { clearOpenFiles } from "@stores/editor";
+import { setFiles } from "@stores/file";
 // Type
 import type { ChangeEvent } from "react";
 // Utility
