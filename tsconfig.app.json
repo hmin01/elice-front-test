@@ -28,6 +28,7 @@
     "paths": {
       "@/*": ["*"],
       "@components": ["components"],
+      "@dtypes/*": ["services/types/*"],
       "@features/*": ["features/*"],
       "@stores/*": ["services/stores/*"],
       "@utilities/*": ["utilities/*"]

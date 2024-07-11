@@ -1,20 +1,20 @@
+// Hook
+import { useFiles, useItem } from "./FileTree.hooks";
 // Icon
 import { IoChevronDown, IoChevronForward } from "react-icons/io5";
-// Store
-import { useGetFiles } from "@stores/editor";
-import { useCallback, useState } from "react";
 // Type
 import { KeyListItemProps, KeyListProps } from "./FileTree.types";
 
 export default function FileTree() {
-  const files = useGetFiles();
+  // 업로드 파일 가공을 위한 커스텀 훅
+  const { files } = useFiles();
 
   return <KeyList data={files} depth={0} />;
 }
 
 /**
  * [Internal Component] 키 목록 컴포넌트
- * @param param0
+ * @param params 컴포넌트 속성
  * @returns
  */
 function KeyList({ data, depth, hidden }: KeyListProps) {
@@ -22,7 +22,7 @@ function KeyList({ data, depth, hidden }: KeyListProps) {
     <ul hidden={hidden}>
       {Object.keys(data).map(
         (key: string): JSX.Element => (
-          <KeyListItem data={data[key].children} depth={depth} key={key} type={data[key].type}>
+          <KeyListItem data={data[key]} depth={depth} key={key} type={data[key].type}>
             {key}
           </KeyListItem>
         )
@@ -32,18 +32,12 @@ function KeyList({ data, depth, hidden }: KeyListProps) {
 }
 /**
  * [Internal Component] 키 목록 아이템 컴포넌트
- * @param param0
+ * @param params 컴포넌트 속성
  * @returns
  */
 function KeyListItem({ children, data, depth, type }: KeyListItemProps) {
-  const [hidden, setHidden] = useState<boolean>(true);
-
-  const onClick = useCallback(() => {
-    // 하위 목록 표시/미표시
-    if (type === "directory") {
-      setHidden((state) => !state);
-    }
-  }, [type]);
+  // 아이템에 대한 커스텀 훅
+  const { hidden, onClick } = useItem(type, data);
 
   return (
     <li className="select-none">
@@ -53,7 +47,7 @@ function KeyListItem({ children, data, depth, type }: KeyListItemProps) {
           <>{children}</>
         </span>
       </a>
-      <>{type === "directory" && <KeyList data={data} depth={depth + 1} hidden={hidden} />}</>
+      <>{type === "directory" && <KeyList data={data.children} depth={depth + 1} hidden={hidden} />}</>
     </li>
   );
 }
