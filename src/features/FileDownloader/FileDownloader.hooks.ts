@@ -3,6 +3,7 @@ import JSZip from "jszip";
 // React hook
 import { useCallback } from "react";
 // Store
+import { useGetEdited } from "@stores/editor";
 import { useGetFiles, useGetFileName } from "@stores/file";
 
 /**
@@ -12,6 +13,9 @@ import { useGetFiles, useGetFileName } from "@stores/file";
 export function useHandler() {
   // 업로드된 파일들
   const files = useGetFiles();
+  const edited = useGetEdited();
+  // 업로드 파일 이름
+  const filename = useGetFileName();
 
   /** [Handler] 다운로드 이벤트 처리 */
   const onDownload = useCallback(() => {
@@ -20,13 +24,10 @@ export function useHandler() {
     // Zip 파일 생성을 위한 데이터 추가
     for (const [key, value] of Object.entries(files)) {
       const fileData: any = value;
-      // 디렉터리인 경우
-      if (fileData.dir) {
-        jsZip.folder(key);
-      }
-      // 파일인 경우
-      else {
-        jsZip.file(key, fileData.async("string"));
+      // 파일 추가
+      if (!fileData.dir) {
+        console.log(key, edited[key]);
+        jsZip.file(key, edited[key] ? edited[key] : fileData.async("blob"));
       }
     }
 
@@ -35,14 +36,14 @@ export function useHandler() {
       // <a> 태그 생성
       const elem: HTMLAnchorElement = document.createElement("a");
       // 파일명 및 다운로드 데이터 설정
-      elem.download = "test.zip";
+      elem.download = filename ?? "Archive.zip";
       elem.href = URL.createObjectURL(data);
       // 이벤트 발생 및 엘리먼트 제거
       document.body.appendChild(elem);
       elem.click();
       document.body.removeChild(elem);
     });
-  }, [files]);
+  }, [edited, filename, files]);
 
   return {
     /** 다운로드 이벤트 핸들러 */

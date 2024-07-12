@@ -9,7 +9,7 @@ import { useEffect, useRef } from "react";
  * @param content 에디터 내용
  * @returns 참조 객체를 포함하는 객체
  */
-export function useEditor(key?: string, content?: string) {
+export function useEditor(key?: string, content?: string, onChange?: (key: string, content: string) => void) {
   // 에디터 엘리먼트 참조 객체
   const monacoElem = useRef<HTMLDivElement>(null);
   // 에디터
@@ -23,15 +23,30 @@ export function useEditor(key?: string, content?: string) {
         editor.current = monaco.editor.create(monacoElem.current, {
           automaticLayout: true,
         });
+        editor.current.onKeyDown((e: monaco.IKeyboardEvent) => {
+          e.stopPropagation();
+          if (e.metaKey && e.keyCode === 49) {
+            if (onChange) {
+              // 현재 에디터의 모델
+              if (editor.current) {
+                const model = editor.current.getModel();
+                if (model) {
+                  onChange(model.uri.authority.concat(model.uri.path), model.getValue());
+                }
+              }
+            }
+          }
+        });
       }
     }
 
     // Unmount
     () => editor.current?.dispose();
   }, []);
-
+  /** 키에 따른 모델 생성 및 관리 */
   useEffect(() => {
-    if (key) {
+    // 선택된 키에 대한 모델 생성 및 설정
+    if (key !== undefined && key !== "") {
       // 모델 조회
       let model = getModel(key);
       // 없을 경우, 모델 생성

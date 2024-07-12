@@ -2,6 +2,9 @@ import { create } from "zustand";
 
 // Interface
 interface EditorState {
+  edited: {
+    [key: string]: string;
+  };
   /** 편집을 위해 열려진 파일들에 대한 데이터 */
   openFiles: {
     [key: string]: {
@@ -15,13 +18,13 @@ interface EditorState {
 
 // Store
 export const useEditorStore = create<EditorState>(() => ({
-  files: {},
-  isUpload: false,
+  edited: {},
   openFiles: {},
   selected: "",
 }));
 
 // Actions (getter)
+export const useGetEdited = () => useEditorStore((state) => state.edited);
 export const useGetOpenFiles = () => useEditorStore((state) => state.openFiles);
 export const useGetSelected = () => useEditorStore((state) => state.selected);
 // Actions (setter)
@@ -50,7 +53,11 @@ export const addOpenFile = (key: string, name: string, value: string) =>
     },
     selected: key,
   }));
-export const setSelected = (key: string) =>
-  useEditorStore.setState(() => ({
-    selected: key,
+export const setEdited = (key: string, value: string) =>
+  useEditorStore.setState((state) => ({
+    edited: {
+      ...state.edited,
+      [key]: value,
+    },
   }));
+export const setSelected = (key: string) => useEditorStore.setState(() => ({ selected: key }));

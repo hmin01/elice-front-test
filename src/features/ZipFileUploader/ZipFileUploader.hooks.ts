@@ -4,7 +4,7 @@ import JSZip from "jszip";
 import { useCallback } from "react";
 // Store
 import { clearOpenFiles } from "@stores/editor";
-import { setFiles } from "@stores/file";
+import { setFileName, setFiles } from "@stores/file";
 // Type
 import type { ChangeEvent } from "react";
 // Utility
@@ -36,8 +36,9 @@ export function useUploader() {
       // 파일 읽기 이벤트 핸들러
       reader.onloadend = (e) => {
         if (e.target) {
-          JSZip.loadAsync(e.target.result).then((data) => {
+          JSZip.loadAsync(e.target.result, { checkCRC32: true }).then((data) => {
             setFiles(data.files);
+            setFileName(file.name);
           });
         }
       };
