@@ -12,7 +12,7 @@ function App() {
         <FileDownloader />
       </header>
       <section className="flex h-[calc(100vh-64px)] relative w-full">
-        <aside className="border-r border-slate-200 h-full overflow-y-auto w-80">
+        <aside className="border-r border-slate-200 h-full w-80">
           <FileTree />
         </aside>
         <div className="w-[calc(100vw-320px)]">

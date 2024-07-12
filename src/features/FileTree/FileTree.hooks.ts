@@ -1,10 +1,12 @@
+// Monaco
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 // React hook
 import { useCallback, useEffect, useMemo, useState } from "react";
 // Store
-import { addOpenFile, useGetSelected } from "@stores/editor";
+import { addOpenFile, closeFile, setSelected, setSelectedForTree, useGetSelected, useGetSelectedForTree } from "@stores/editor";
 import { addNewObject, removeFile, useGetFileName, useGetFiles } from "@stores/file";
-
 // Type
+import type { MouseEvent } from "react";
 import type { DirectoryType, FileTreeType, FileType } from "@dtypes/file";
 // Utility
 import { isImageFile, isNotEditable } from "@utilities/file";
@@ -33,81 +35,131 @@ export function useFiles() {
  */
 export function useItem(data: FileType) {
   // 선택된 파일 키(Key)
-  const selected = useGetSelected();
+  const selectedKey = useGetSelected();
+  // 선택된 파일 키(Key) (For Tree)
+  const selectedForTree = useGetSelectedForTree();
   // 하위 목록 숨김 상태
   const [hidden, setHidden] = useState<boolean>(true);
 
   /** [Handler] 클릭 이벤트 처리 */
-  const onClick = useCallback(() => {
-    // 아이템 유형이 "폴더"일 경우
-    if (data.isDir) {
-      setHidden((state) => !state);
-    }
-    // 아이템 유형이 "파일"일 경우
-    else {
-      if (data) {
-        // 기타 편집 불가 확장자 예외 처리
-        if (isNotEditable(data.name)) {
-          return alert("해당 파일은 편집할 수 없습니다.");
-        }
+  const onClick = useCallback(
+    (e: MouseEvent<HTMLElement>) => {
+      e.stopPropagation();
+      // 아이템 유형이 "폴더"일 경우
+      if (data.isDir) {
+        setSelectedForTree(data.key, true);
+        setHidden((state) => !state);
+      }
+      // 아이템 유형이 "파일"일 경우
+      else {
+        if (data) {
+          // 기타 편집 불가 확장자 예외 처리
+          if (isNotEditable(data.name)) {
+            return alert("해당 파일은 편집할 수 없습니다.");
+          }
 
-        // 이미지 확장자 처리
-        if (isImageFile(data.name)) {
-          data.file.async("blob").then((content: Blob) => {
-            content.type;
-            addOpenFile(data.key, data.name, URL.createObjectURL(content));
-          });
-        }
-        // 기타 파일
-        else {
-          // 편집 내용 존재 여부에 따른 처리
-          data.file.async("string").then((content: string) => {
-            addOpenFile(data.key, data.name, content);
-          });
+          // 새로 만든 파일일 경우
+          if (data.isNew) {
+            addOpenFile(data.key, data.name, "");
+          }
+          // 이미지 확장자 처리
+          else if (isImageFile(data.name)) {
+            data.file.async("blob").then((content: Blob) => {
+              content.type;
+              addOpenFile(data.key, data.name, URL.createObjectURL(content));
+            });
+          }
+          // 기타 파일
+          else {
+            // 편집 내용 존재 여부에 따른 처리
+            data.file.async("string").then((content: string) => {
+              addOpenFile(data.key, data.name, content);
+            });
+          }
+          setSelectedForTree(data.key);
         }
       }
-    }
-  }, [data]);
-  const onRemove = useCallback(({ target }: any) => removeFile(target.dataset.key), []);
+    },
+    [data]
+  );
 
   /** 선택된 파일이 위치하는 경로를 파악하여 Tree에 표시 */
   useEffect(() => {
     if (data.isDir) {
-      if (selected !== "" && selected.includes(data.key)) {
+      if (selectedKey !== "" && selectedKey.includes(data.key)) {
         setHidden(false);
       }
     }
-  }, [selected]);
+  }, [selectedKey]);
 
   return {
     /** 하위 목록 숨김 상태 */
     hidden,
     /** 클릭 이벤트 핸들러 */
     onClick,
-    onRemove,
     /** 선택된 파일 키 */
-    selected,
+    selected: selectedForTree[0],
   };
 }
-export function useTreeHandler(files: any) {
-  // 선택된 파일 키
-  const selected = useGetSelected();
+/**
+ * [Hook] 트리 핸들러 관련 커스텀 훅
+ * @returns 핸들러를 포함한 객체
+ */
+export function useTreeHandler() {
+  // 선택된 파일 키 (For Tree)
+  const selected = useGetSelectedForTree();
+  // 선택된 파일 키 (For Tabs)
+  const selectedForTabs = useGetSelected();
 
+  /** [Handler] 파일 추가 */
   const onAddFile = useCallback(() => {
-    console.log(selected, files);
-  }, [files, selected]);
-  const onAddFolder = useCallback(() => {
-    const keys = selected.split("/");
+    const keys = selected[0].split("/");
     if (keys.length === 1) {
-      addNewObject("directory", "");
+      addNewObject("파일", selected[1] === "폴더" ? selected[0] : "");
     } else {
-      addNewObject("directory", keys.slice(0, keys.length - 1).join("/"));
+      addNewObject("파일", keys.slice(0, keys.length - 1).join("/"));
     }
-  }, [files, selected]);
+  }, [selected]);
+  /** [Handler] 폴더 추가 */
+  const onAddFolder = useCallback(() => {
+    const keys = selected[0].split("/");
+    if (keys.length === 1) {
+      addNewObject("폴더", selected[1] === "폴더" ? selected[0] : "");
+    } else {
+      addNewObject("폴더", keys.slice(0, keys.length - 1).join("/"));
+    }
+  }, [selected]);
+  /** [Handler] 공백 클릭 시, 선택 해제 */
+  const onClick = useCallback(() => setSelectedForTree(""), []);
+  /** [Handler] 파일 및 폴더 삭제 */
+  const onDelete = useCallback(() => {
+    if (selected[0] !== "") {
+      if (confirm(`선택한 파일 또는 폴더를 삭제하시겠습니까?\n경로: /${selected[0]}`)) {
+        // 파일 닫기
+        closeFile(selected[0]);
+        // 삭제하려는 파일이 에디터에서 수정 중인 파일인 경우
+        if (selectedForTabs === selected[0]) {
+          setSelected("");
+          // 닫으려는 파일에 대한 에디터 모델 제거
+          monaco.editor.getModel(monaco.Uri.parse(`memory://${selected}`))?.dispose();
+        }
+        // 삭제
+        removeFile(selected[0], selected[1] === "폴더");
+        // 선택 상태 해제
+        setSelectedForTree("");
+      }
+    }
+  }, [selected, selectedForTabs]);
 
   return {
+    /** 파일 추가 이벤트 핸들러 */
     onAddFile,
+    /** 폴더 추가 이벤트 핸들러 */
     onAddFolder,
+    /** 공백 클릭 시, 선택 해제 이벤트 핸들러 */
+    onClick,
+    /** 파일 및 폴더 삭제 이벤트 핸들러 */
+    onDelete,
   };
 }
 
@@ -135,7 +187,7 @@ function transformToJSON(preObj: any): any {
         // 예외 처리
         if (subKeys[j] === "" || subKeys[j].charAt(0) === ".") continue;
         // 데이터 추가
-        nestedObject[subKeys[j]] = preObj[keys[i]].isDir
+        nestedObject[subKeys[j]] = preObj[keys[i]].dir
           ? {
               children: {},
               isDir: true,

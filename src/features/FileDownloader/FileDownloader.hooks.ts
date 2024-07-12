@@ -24,11 +24,10 @@ export function useHandler() {
     // Zip 파일 생성을 위한 데이터 추가
     for (const [key, value] of Object.entries(files)) {
       const fileData: any = value;
+      // 폴더 추가
+      if (fileData.dir) jsZip.folder(key);
       // 파일 추가
-      if (!fileData.dir) {
-        console.log(key, edited[key]);
-        jsZip.file(key, edited[key] ? edited[key] : fileData.async("blob"));
-      }
+      else jsZip.file(key, edited[key] !== undefined ? edited[key] : fileData.async("blob"));
     }
 
     // Zip 파일 생성

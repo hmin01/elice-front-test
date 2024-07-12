@@ -13,7 +13,7 @@ export function useEditor(key?: string, content?: string, onChange?: (key: strin
   // 에디터 엘리먼트 참조 객체
   const monacoElem = useRef<HTMLDivElement>(null);
   // 에디터
-  const editor = useRef<monaco.editor.ICodeEditor>();
+  const editor = useRef<monaco.editor.IStandaloneCodeEditor>();
 
   /** 초기 렌더링 시, 모나코 에디터 설정 */
   useEffect(() => {
@@ -39,7 +39,6 @@ export function useEditor(key?: string, content?: string, onChange?: (key: strin
         });
       }
     }
-
     // Unmount
     () => editor.current?.dispose();
   }, []);
@@ -53,7 +52,7 @@ export function useEditor(key?: string, content?: string, onChange?: (key: strin
       if (model === null) {
         model = createModel(key, content);
       }
-
+      console.log("chanage model", model);
       // 에디터 모델 설정
       if (editor.current) {
         editor.current.setModel(model);
