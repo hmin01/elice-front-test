@@ -1,30 +1,86 @@
-# React + TypeScript + Vite
+## Eilce Frontent Test
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Getting started
 
-Currently, two official plugins are available:
+1. 의존성 설치
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+```shell
+npm install
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+2. 빌드 및 실행
+
+```shell
+# 개발모드 실행
+npm run dev
+
+# 빌드
+npm run build
+# 실행
+npm run preview
+```
+
+### 사용된 프레임워크 및 라이브러리
+
+- **Vite for React**
+
+  Webpack을 사용하는 CRA 대신 빠른 빌드 툴인 Esbuild를 기반으로 빠르고 간결한 개발 경험을 제공하는 Vite를 이용하여 프로젝트를 구성하였습니다.
+
+- **TailwindCSS**
+
+  제로 런타임으로 빠르고 유연하기 때문에 컴포넌트의 스타일링에 대한 개발 시간 단축과 용이한 유지 보수를 위해 사용하였습니다.
+
+- **Zustand**
+
+  요구 사항에 대한 기능 구현을 위해 객체 형태의 상태 관리가 필요하였으며, 이를 위해 Flex 기반 전역 상태 관리 라이브러리인 Zustand를 도입하였습니다.
+
+- **JSZip**
+
+  기능 구현을 위해 JS 기반으로 압축 파일을 컨트롤할 수 있는 라이브러리를 사용했습니다.
+
+- **Monaco Editor**
+
+  기능 구현을 위해 MS에서 제공하는 에디터 라이브러리를 사용하였습니다.
+
+### 애플리케이션 구조
+
+도메인과 접근성에 따라 책임과 기능을 분리 구현하는 클린 아키텍처(Clean Architecture)를 기반으로 애플리케이션 구조를 설계 및 구현하였습니다.
+
+- **components**: 공용 컴포넌트 모음
+- **features**: 특정 기능 단위 컴포넌트 모음
+- **services**: 서비스 관리를 위한 유틸 모음
+  - **stores**: 전역 상태 관리 모음
+  - **types**: 데이터 유형 관리 모음
+- **utilities**: 공용 유틸 함수 모음
+
+추가적으로 컴포넌트 폴더 내 역할에 따라 파일을 구분함으로써 애플리케이션 구조에 대한 가독성을 높이고 일관된 코딩 패턴을 유지할 수 있도록 구성하였습니다.
+
+- `.tsx`: 렌더링을 담당하는 컴포넌트 파일
+- `.hooks.ts`: 컴포넌트의 기능에 대한 커스텀 훅이 정의된 파일
+- `.types.ts`: 컴포넌트 속성 등과 같은 데이터 유형이 정의된 파일
+
+### 구현 설명
+
+- 컴포넌트들은 모두 함수형 컴포넌트 형태로 구현하였으며, useMemo, useCallback을 이용하여 컴포넌트 내부의 변수와 함수를 메모이제이션함으로써 최적화를 적용하였습니다. 일부 컴포넌트는 내부 상태 관리를 위해 useState, useRef를 이용하였습니다.
+
+- 상단의 File Uploader 컴포넌트를 이용하여 Zip 파일만을 업로드할 수 있도록 구현하였으며, 업로드 이후에 Zip 파일을 분석하여 폴더와 파일에 대한 계층 구조를 파악하여 이를 File Tree로 사용자에게 제공합니다. 또한, 업로드 이후에는 Zip 파일 다운로드를 위한 버튼이 표시되며, 이를 클릭하여 변경 사항을 포함한 파일 데이터를 다운받을 수 있습니다.
+
+- File Tree 컴포넌트 상단 헤더 내 메뉴 아이템을 통해 파일 추가, 폴더 추가, 파일 또는 폴더 삭제 기능을 제공하고 있습니다. 이 때, 추가를 위한 위치는 File Tree에서 선택된 폴더 또는 선택된 파일이 속해 있는 폴더가 지정되며, 아무 선택을 하지 않은 경우라면 계층 구조의 최상단이 지정됩니다. 파일 또는 폴더를 삭제할 경우, 삭제에 대한 확인 메시지가 보여지며, 폴더를 삭제하는 경우 하위 폴더 및 파일도 함께 삭제됩니다.
+
+- 파일의 확장자를 이용하여 이미지와 편집 가능한 파일을 구분하였으며, 편집 불가 파일 또한 확장자로 구분하였습니다. File Tree에서 파일을 선택하면 File Tabs 컴포넌트에 아이템이 추가되고, 편집 가능 여부에 따라 에디터 또는 이미지가 표시됩니다. 탭 아이템은 x 아이콘을 클릭하여 닫을 수 있으며, 선택한 아이템이 닫히는 경우에는 이전 인덱스에 대한 아이템이 자동으로 선택됩니다.
+
+- 에디터 객체는 하나만 생성되며, useRef를 사용하여 리렌더링이 되어도 유지되도록 구현하였습니다. 편집을 위해 열려있는 각 파일에 따라 모델을 생성하여 에디터의 모델을 교체하는 방식으로 파일에 대한 내용을 유지하면서 편집하고, undo/redo 기능을 사용할 수 있도록 구현하였습니다.
+
+- 업로드된 파일 내용과 선택된 파일 정보, Tab과 Tree에서 선택된 파일 표시를 위한 파일 키 정보 등 기능 구현을 함에 있어서 필요한 일부 데이터들은 전역 상태 관리를 통해 저장 및 사용하였으며, 상태 스토어를 직접 컴포넌트에서 사용하지 않고 상태 변경을 위한 액션 함수를 구현하고 이를 이용함으로써 함수 재사용성과 일관된 코딩 패턴을 적용하기 위해 노력했습니다. 추가적으로 파일이 많을 경우를 고려하여 빠른 조회와 추가/삭제를 위해 Key-value 형태로 데이터를 관리해보았습니다.
+
+### 개선 사항 및 아쉬운 점
+
+- Monaco Editor에서 모델을 생성할 때, 해당 모델에 대한 언어와 하이라이팅 기능을 추가할 수 있는데 시간 관계 상 파일의 확장자를 이용하여 언어를 적용하는 부분을 구현하지 못하였습니다.
+
+- Editor 컴포넌트를 공용으로 사용할 수 있도록 만들어 재사용성을 높여보려고 하였지만, 많이 사용해 보지 않은 에디터 라이브러리를 이용하다보니 미숙한 설계 및 구현이 아쉬운 부분입니다. 또한, 짧은 기간으로 Input, Button과 같은 단일 책임을 가질 수 있는 공용 컴포넌트들을 제대로 구현하지 못하여서 더 효율적인 개발을 진행하지 못한 것 같다고 생각합니다.
+
+- Tab과 Tree 컴포넌트에 스크롤 기능을 구현하여 선택된 파일에 따라 해당 파일을 포커즈할 수 있는 부드러운 UX를 구현하지 못한게 아쉬운거 같습니다.
+
+- 압축을 해제한 파일들에 대해 binary와 editable 여부를 판단하는 것을 파일 확장자를 이용해서 처리하였는데, 더 효과적이고 올바른 방법을 찾지 못한 것이 아쉽습니다.
+
+- 컴포넌트 및 함수 재사용을 통해 1차적으로 번들 사이즈 감소시키고, 메모이제이션을 이용하여 렌더링 향상시키도록 구현하였습니다. 추가적인 개선을 위해 동적 임포트를 이용한 코드 스플릿 등의 방법을 적용한다면 번들 사이즈를 더 감소시키고 렌더링 성능을 높일 수 있을 것으로 예상합니다.
